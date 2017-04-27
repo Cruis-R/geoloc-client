@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cartographie</title>
+    <link rel="stylesheet" href="assets/commons/js/leaflet-1.0/leaflet.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+    </style>
+</head>
+<body id="display">
+    <header class="entete">
+        <!--h1>Cartographie des chauffeurs</h1-->
+        <p class="session session-info">
+            <span id="derniere-update">-</span>
+            <span id="whois" contenteditable="true">me</span>
+            <span id="presents"></span>
+        </p>
+    </header>
+    <!--form class="user-form" action="index.html" method="post">
+        <input type="text" name="id-getter" id="id-getter" value="me" placeholder="@id de la personne à positionner" size="30" />
+    </form>
+    <button id="gps">Voir les positions</button-->
+    <main class="contenu">
+        <div id="leafletmap"></div>
+        <aside id="menu-principal" class="mobile">
+            <div class="coulisse">
+                <button class="actionneur">Options</button>
+            </div>
+            <ul class="options-menu">
+                <li class="option">Identification</li>
+                <li class="option">Mon planning</li>
+
+            </ul>
+        </aside>
+    </main>
+    <footer class="annexes">
+    </footer>
+
+    <!-- Scripts communs -->
+    <script src="assets/commons/js/jquery-2.2.3.min.js"></script>
+    <script src="assets/commons/js/detector.js"></script>
+    <script src="assets/commons/js/leaflet-1.0/leaflet.js"></script>
+    <script src="assets/commons/js/position.js"></script>
+    <script src="assets/commons/js/promise.min.js"></script>
+    <script src="assets/commons/js/jsonld.js"></script>
+    <script src="assets/commons/js/dialogs.js"></script>
+    <script src="assets/commons/js/ihm.js"></script>
+    <script src="assets/commons/js/conf.js"></script>
+    <!-- Scripts chauffeurs -->
+    <script src="assets/js/driver.js"></script>
+    <script src="assets/js/conf.js"></script>
+    <script>
+    // extension à jQuery (empruntée à rdfviewer):
+    $.extend({
+        getUrlVars: function(){
+            var vars = [], hash;
+            var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+            for(var i = 0; i < hashes.length; i++)
+            {
+                hash = hashes[i].split('=');
+                vars.push(hash[0]);
+                vars[hash[0]] = hash[1];
+            }
+            return vars;
+        },
+        getUrlVar: function(name){
+            return $.getUrlVars()[name];
+        }
+    });
+
+	// récupérer @id et name depuis l'URL HTTP
+	var name = $.getUrlVar("name"),
+        qid = $.getUrlVar("@id"),
+        id,
+        driverIdentity = localStorage.getItem('driverIdentity'); // Inspecter l'identité sauvegardée
+    if (typeof qid === 'undefined') {
+        id = "test";
+        qid = id;
+        console.log("qid undefined");
+    } else {
+        $("#whois").text(qid)
+    };
+    // id = (qid ? qid : (driverIdentity ? driverIdentity : $("#whois").text()));
+    // Rendre l'URI de l'identifiant absolu
+    /*console.log(qid);
+    if (/^\[a-z]{3,5}:/.test(qid)) {
+        id = qid;
+    } else if (qid.indexOf('@') === -1) {
+        id = 'mailto:'+qid;
+        console.log(id);
+    } else {
+        id = 'urn:'+qid
+    }*/
+    // Sauvegarder l'identité
+    console.log("id:"+id);
+    localStorage.setItem('driverIdentity', id);
+
+    // Le chauffeur est en état d'attente
+    var currentStatus = driverStatus.IDLE;
+    localStorage.setItem('driverStatus', driverStatus.IDLE);
+
+    $(window).ready(function() {
+        // Etat initial de l'application
+        console.log("isMobile : " + deviceDetector.isMobile);
+        if ('touchend' in navigator) {eventAlternative = 'touchend'} else {eventAlternative = 'click'};
+        console.log(eventAlternative);
+
+        // Activation de événements utilisateur
+        $('.actionneur').on(eventAlternative, function () {
+            // petit menu déroulant:
+            $mobile = $(this).closest('.mobile');
+            if ($mobile.css('left').slice(0,1) == "-") {
+                $mobile.animate({left: "+=200"})
+            } else {
+                $mobile.animate({left: "-=200"})
+            }
+        })
+
+        // Affichage inital de la carte
+        Pins.gpsPicker()
+            .then(Pins.positionMake, Pins.positionFail)
+            .then(Driver.driverMap, Pins.warning)
+            // TODO:Afficher la carte même en cas d'err
+            // .then(Driver.driverMap, Driver.driverMap)
+            .then(Dialog.pollRequest, Pins.tacet);
+
+        // Enclenchement de la boucle d'écoute
+        Dialog.listen();
+    })
+    </script>
+</body>
+</html>

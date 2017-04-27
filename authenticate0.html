@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Identification</title>
+    <link rel="stylesheet" href="assets/js/leaflet-1.0/leaflet.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        #display {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        header,
+        footer {
+            height: 50px;
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+        main {
+            flex-grow: 1;
+            flex-shrink: 1;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+        }
+        #leafletmap {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body id="display">
+    <header class="entete">
+        <h1>Identification de l'utilisateur</h1>
+    </header>
+    <main class="contenu">
+        <form class="user_form" action="/authenticate" method="post">
+            <input type="text" name="id" id="user_id" value="" required="required" />
+            <input type="text" name="passwd" id="user_passwd" value="" required="required" />
+        </form>
+        <button id="auth">Envoyer</button>
+    </main>
+    <footer class="annexes">
+    </footer>
+
+    <script src="assets/commons/js/jquery-2.2.3.min.js"></script>
+    <script src="assets/commons/js/leaflet-1.0/leaflet.js"></script>
+    <script src="assets/commons/js/position.js"></script>
+    <script>
+        $(window).ready(function () {
+            $('#auth').on('click',function(event){
+                event.preventDefault();
+                console.log("click");
+                let id = $('#user_id').val();
+                let passwd = $('#user_passwd').val();
+                if ( id !== '' && passwd !== '') {
+                    user_data = `{"@id": "${id}", "password": "${passwd}"}`;
+                    uri = `/authenticate?@id=mailto:${id}&password=${passwd}`;
+                    console.log(uri);
+                    $.ajax({
+                        type: 'GET',
+                        url:uri,
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 4000
+                    }).success(function(reponse) {
+                    	window.location.href = '/';
+                    }).fail(function(err) {
+
+                    }).always(function(err) {
+
+                    })
+                } else {
+                    alert('Vous devez remplir les champs')
+                }
+            });
+     })
+    </script>
+
+
+</body></html>

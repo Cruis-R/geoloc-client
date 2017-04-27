@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cartographie</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+    #users-rows td {
+        padding: .5rem 2rem 0.5rem 0.5rem;
+    }
+    </style>
+</head>
+<body id="display">
+    <header class="entete">
+        <!--h1>Cartographie des chauffeurs</h1-->
+        <p class="session-info">
+            <span id="derniere-update">-</span>
+            <span id="whois" contenteditable="true">me</span>
+            <span id="presents"></span>
+        </p>
+    </header>
+    <!--form class="user-form" action="index.html" method="post">
+        <input type="text" name="id-getter" id="id-getter" value="me" placeholder="@id de la personne à positionner" size="30" />
+    </form>
+    <button id="gps">Voir les positions</button-->
+    <main class="contenu">
+        <div id="leafletmap">
+            <table id="users-list">
+                <thead>
+                </thead>
+                <tbody id="users-rows">
+                </tbody>
+                <tfoot>
+                </tfoot>
+            </table>
+        </div>
+        <aside id="menu-principal" class="mobile">
+        </aside>
+    </main>
+    <footer class="annexes">
+    </footer>
+
+    <script src="assets/commons/js/jquery-2.2.3.min.js"></script>
+    <script>
+    function usersTable () {
+        // $('#presents').html(Pins.markers.length + " chauffeur(s) en service");
+        // $('#derniere-update').html((new Date).toLocaleTimeString());
+        // $('header.entete').css('background-color', COULEURS_ERREURS[profil.error]);
+    	$.ajax({
+                type: 'POST',
+                // Indiquer l'URL réel de l'API
+                url:'/oudini/commons/position.json',
+                data: {},
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                timeout: 4000
+            }).done(function(json_positions) {
+                var positions = jQuery.parseJSON(json_positions);
+                var points = positions['@graph'];
+                console.log(points);
+                points.map(function(p) {
+                    console.log("  point " + p["@id"]);
+                    var row = $('<tr></tr>');
+                    $("#users-rows").append(row);
+                    var c1 = $('<td></td>').html(p["@id"]).appendTo(row);
+                    var c2 = $('<td></td>').html(p.lat).appendTo(row);
+                    var c3 = $('<td></td>').html(p.long).appendTo(row);
+
+                    var url = 'http://api-adresse.data.gouv.fr/reverse/?lon='+p.long+'&lat='+ p.lat;
+                    var method = 'GET';
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function(event) {
+                        var reponse = jQuery.parseJSON(this.response);
+                        console.log(reponse);
+                        var adresse = reponse.features[0];
+                        var c4 = $('<td></td>').html(adresse.properties.label).appendTo(row);
+                    };
+
+                    xhr.onerror = function() {
+                        // Error code goes here.
+                    };
+
+                    xhr.open(method, url, true);
+                    xhr.send();
+                }).fail(function(err){
+
+                }).always(function() {
+
+                })
+        })
+    }
+    $(window).ready(function() {
+        // var current = {};
+        // console.log(current.timestamp);
+        usersTable();
+    })
+    </script>
+</body>
+</html>
